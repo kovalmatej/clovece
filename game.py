@@ -6,15 +6,14 @@ def generate_board(n):
 
     for i in range(n):
         for j in range(n):
-            # 1. časť = Selektuje všetky prvky vo vnútornom "krížiku", kde ramená sú dĺžky 3
+            # 1. časť = Selektuje všetky prvky vo vnútornom "krížiku", kde ramená sú dĺžky 3 | 2. časť = Vyhodí vnútro, kde budú domčeky
             if (((n - 3) / 2 <= j <= (n + 1) / 2) & ((j != (n - 1) / 2) & (i != (n - 1) / 2))) | (
-            # 2. časť = Vyhodí vnútro, kde budú domčeky
                     (i == (n - 1) / 2) & ((j == 0) | (j == n - 1))) | (
-            # Aby horná podmienka nevyhodila konce, tak sa určia vínimky v strede obidvoch cyklov ak je jeden...
-                    (j == (n - 1) / 2) & ((i == 0) | (i == n - 1))):  # ...z nich na konci alebo na začiatku
+                    # Aby horná podmienka nevyhodila konce stredov ramien, tak sa určia vínimky v strede obidvoch cyklov ak je jeden z nich na konci alebo na začiatku
+                    (j == (n - 1) / 2) & ((i == 0) | (i == n - 1))):
                 game_board[i][j] = '*'
                 game_board[j][i] = '*'
-            if (j == (n - 1) / 2) & (i != n-1):
+            if (j == (n - 1) / 2) & (i != n - 1):  # Vykresli domčeky v strede šachovnice
                 game_board[i][j] = 'D'
                 game_board[j][i] = 'D'
 
