@@ -190,18 +190,18 @@ def moveFigure(board, player, figure, length, figures, figures_in_house):
     if new_pos == 32:
         new_pos = 0
 
-    if 32 > new_pos:
+
+    if (32 > new_pos) & player == 'A':
         y = positions[new_pos][0]
         x = positions[new_pos][1]
         board[y][x] = str(player)
         board[oldY][oldX] = '*'
-        figures[figure_index] = [y, x]
+        figures[figure_index] = [y, x, 0]
 
     if (32 < new_pos < 32 + (board_size - 3) / 2) & (player == 'A'):
         board[new_pos - 31][int((board_size - 1) / 2)] = 'A'
         board[oldY][oldX] = '*'
         figures[figure_index][2] = 1
-        figures[figure_index] = [0, 0]
         figures_in_house += 1
 
     if (32 < new_pos < 32 + (board_size - 3) / 2) & (player == 'B'):
@@ -213,16 +213,11 @@ def moveFigure(board, player, figure, length, figures, figures_in_house):
         figures[figure_index] = [y, x]
 
     if (15 < new_pos < 15 + (board_size - 3) / 2) & (player == 'B'):
-        board[board_size - new_pos + 13][int((board_size - 1) / 2)] = 'B'
+        board[board_size - new_pos + 14][int((board_size - 1) / 2)] = 'B'
         board[oldY][oldX] = '*'
         figures[figure_index][2] = 1
-        figures[figure_index] = [0, 0]
         figures_in_house += 1
 
-    if (len(figures)) & (new_pos <= 32) == 1:
-        y = positions[new_pos][0]
-        x = positions[new_pos][1]
-        figures[0] = [y, x]
 
 
 # GAME
