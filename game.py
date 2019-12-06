@@ -12,13 +12,19 @@ import random
 
 # MAIN GAME FUNCTIONS
 
-def create_game(board_size):
-    return generate_board(board_size)
-
-
 def throw_dice():
     return random.randint(1, 6)
 
+def six_throwed(game_board, player, figures, figures_in_house, choice, board_size):
+    if figures_in_house == len(figures):
+        choice = 1
+        print("Bola pridaná figurka")
+    else:
+        choice = int(input(
+            "Padla 6, zadaj 1 ak chceš pridať nového panáčika, ľubovoľnú inú hodnotu ak chceš pohnúť panáčikom."))
+    if choice == 1:
+        print("pridaná figurka")
+        add_figure(player, game_board, figures, board_size)
 
 def game_status(counter):
     throwed_number = throw_dice()
@@ -30,41 +36,34 @@ def game_status(counter):
     return throwed_number
 
 
-def start_game(game_board):
+def start_game():
     figures1 = []
     figures2 = []
-    add_figure('A', game_board, figures1)
-    add_figure('B', game_board, figures2)
-
-    counter = 0
-    winner = ''
     figures_in_houseA = 0
     figures_in_houseB = 0
 
+    winner = ''
+    board_size = int(input("Zadaj veľkosť hracej plochy"))
+    game_board = generate_board(board_size)
+
+    add_figure('A', game_board, figures1, board_size)
+    add_figure('B', game_board, figures2, board_size)
+
+    counter = 0
+
     draw_board(game_board)
-    while (winner == ''):
+    while winner == '':
         number = game_status(counter)
         y, x, choice = 0, 0, 0
-        print(figures1, " : ", figures2)
-        print(figures_in_houseA, " a ", figures_in_houseB)
 
         if counter % 2 == 0:
             if (number == 6) & (len(figures1) < 5) & (not (game_board[0][5] == 'A')):
-                if (figures_in_houseA == len(figures1)):
-                    choice = 1
-                    print("Bola pridaná figurka")
-                else:
-                    choice = int(input(
-                        "Padla 6, zadaj 1 ak chceš pridať nového panáčika, ľubovoľnú inú hodnotu ak chceš pohnúť panáčikom."))
-                if choice == 1:
-                    print("pridaná figurka")
-                    add_figure('A', game_board, figures1)
+                six_throwed(game_board, player, figures1, figures_in_houseA, choice, board_size)
 
-            if ((len(figures1) == 1) | (len(figures1) - figures_in_houseA)) & (figures_in_houseA != len(figures1)):
+            if ((len(figures1) == 1) | (len(figures1) - figures_in_houseA) == 1) & (figures_in_houseA != len(figures1)):
                 move_figure(game_board, 'A', figures1[0], number, figures1, figures_in_houseA, figures2)
-            elif (choice != 1) | ((len(figures1) != 1) & (choice != 1)) & (figures_in_houseA != len(figures1)):
-                print([y, x, 0] in figures1)
-                while (not (check_position(game_board, 'A', figures1, [y, x, 0], number))) | (
+            elif ((len(figures1) != 1) & (choice != 1)) & (figures_in_houseA != len(figures1)):
+                while (not (check_moving_position(game_board, 'A', figures1, [y, x, 0], number))) | (
                 not (([y, x, 0]) in figures1)):
                     x = int(input("Zadaj X súradnicu panáčika, ktorým chceš pohnúť."))
                     y = int(input("Zadaj Y súradnicu panáčika, ktorým chceš pohnúť."))
@@ -104,6 +103,14 @@ def start_game(game_board):
         draw_board(game_board)
 
 
+# CHECKING FUNCTIONS
+
+def check_position(board, player, position):
+    if board[position[0]][position[1]] == player:
+        return False
+    return True
+
+
 # GAME BOARD FUNCTIONS
 
 
@@ -130,18 +137,24 @@ def generate_board(n):
 
 def draw_board(game_board):
     print("   ", end="")
-    for i in range(board_size):
-        print(i, end=" ")
+    for i in range(len(game_board) - 1):
+        if i < 10:
+            print(i, end=" ")
+        else:
+            print(i - 10, end=" ")
     print("")
 
     a = 0
     for row in game_board:
-        print(a, "", end=" ")
+        if a < 10:
+            print(a, "", end=" ")
+        else:
+            print(a - 10, "", end=" ")
         a += 1
         print(' '.join([element for element in row]))  # Vypíše všetky elementy v riadku a spojí ich medzerou
 
 
-def get_positions(game_board):
+def get_positions(game_board, board_size):
     positions = []
 
     for i in range(int((board_size - 1) / 2)):
@@ -176,11 +189,11 @@ def get_positions(game_board):
     return positions
 
 
-def check_position(game_board, player, figures, figure, length):
+def check_moving_position(game_board, player, figures, figure, length, board_size):
     if (figure[1] == 0) & (figure[0] == 0):
         return False
 
-    positions = get_positions(current_game)
+    positions = get_positions(game_board, board_size)
 
     if [figure[0], figure[1]] in positions:
         current_pos = positions.index([figure[0], figure[1]])
@@ -192,7 +205,6 @@ def check_position(game_board, player, figures, figure, length):
         new_pos -= (board_size - 1) * 4
 
     if (game_board[positions[new_pos][0]][positions[new_pos][1]]) == player:
-        print(game_board[positions[new_pos][0]][positions[new_pos][1]])
         return False
 
     return True
@@ -200,24 +212,19 @@ def check_position(game_board, player, figures, figure, length):
 
 # PLAYERS FUNCTIONS
 
-def add_figure(player, board, figures):
-    if player == 'A':
-        if board[0][int((board_size + 1) / 2)] == 'A':
-            print('Na štarte už je panáčik hráča A')
-        else:
-            board[0][int((board_size + 1) / 2)] = 'A'
+def add_figure(player, board, figures, board_size):
+    # Otestuje či je voľná štartovacia plocha
+    if (player == "A") & (check_position(board, player, [[0][int((board_size + 1) / 2)]])):
             figures.append([0, int((board_size - 1) / 2 + 1), 0])
-
-    if player == 'B':
-        if board[int(board_size - 1)][int((board_size - 3) / 2)] == 'B':
-            print('Na štarte už je panáčik hráča B')
-        else:
-            board[int(board_size - 1)][int((board_size - 3) / 2)] = 'B'
+    elif (player == "B") & (check_position(board, player, [[board_size - 1][int((board_size - 1) / 2 - 1)]])):
             figures.append([board_size - 1, int((board_size - 1) / 2 - 1), 0])
 
 
 def delete_figure(player, board, figures, figure):
     figures.remove(figure)
+
+def make_move(board, player, number, figures1, figures2, figures_in_house, y, x, choice, board_size):
+    
 
 
 def move_figure(board, player, figure, length, figures, figures_in_house, figures2):
@@ -285,7 +292,4 @@ def move_figure(board, player, figure, length, figures, figures_in_house, figure
 
 # GAME
 
-board_size = int(input("Zadaj velkost šachovnice"))
-current_game = create_game(board_size)
-
-start_game(current_game)
+start_game()
