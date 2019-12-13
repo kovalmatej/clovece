@@ -75,7 +75,7 @@ def start_game():
 
         draw_board(game_board)
 
-
+agsddasgasdgasg
 # CHECKING FUNCTIONS
 
 def check_position(board, player, position):  # Zistí či je voľná štartovacia pozícia pre jednotlivého hráča
