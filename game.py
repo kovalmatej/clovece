@@ -1,11 +1,9 @@
-# TODO:
-#   - F-ce na získanie indexu pozície
-#   - Zautomatizovať a zovšeobecniť samotnú start_game
-#   - Zjednodušiť get_positions
-#   - Odstránenie prvku
-#
-#
-#
+#TO DO:
+#Ak A je hore a hodí jednotku zmizne
+#Dava na vyber kym pohnut aj ked je iba jeden
+#B ide do stredu
+#A bol an predposlednom a hodil 2 a bol akokeby o tri
+#Ak je B na 32 ta ksa nevie pohnut
 
 import random
 
@@ -15,16 +13,20 @@ import random
 def throw_dice():
     return random.randint(1, 6)
 
-def six_throwed(game_board, player, figures, figures_in_house, choice, board_size):
+
+def six_throwed(game_board, player, figures, figures_in_house, board_size):
+    choice = int(
+        input("Padla 6, zadaj 1 ak chceš pridať nového panáčika, ľubovoľnú inú hodnotu ak chceš pohnúť panáčikom."))
+
     if figures_in_house == len(figures):
         choice = 1
         print("Bola pridaná figurka")
-    else:
-        choice = int(input(
-            "Padla 6, zadaj 1 ak chceš pridať nového panáčika, ľubovoľnú inú hodnotu ak chceš pohnúť panáčikom."))
+
     if choice == 1:
-        print("pridaná figurka")
+        print("Bola pridaná figurka")
         add_figure(player, game_board, figures, board_size)
+    return choice
+
 
 def game_status(counter):
     throwed_number = throw_dice()
@@ -37,10 +39,8 @@ def game_status(counter):
 
 
 def start_game():
-    figures1 = []
+    figures1 = []  # Listy pozícií panáčikov a koľko ich je v domčeku z jednotlivých tímov.
     figures2 = []
-    figures_in_houseA = 0
-    figures_in_houseB = 0
 
     winner = ''
     board_size = int(input("Zadaj veľkosť hracej plochy"))
@@ -55,43 +55,16 @@ def start_game():
     while winner == '':
         number = game_status(counter)
         y, x, choice = 0, 0, 0
+        figures_in_houseA = 0
+        figures_in_houseB = 0
 
         if counter % 2 == 0:
-            if (number == 6) & (len(figures1) < 5) & (not (game_board[0][5] == 'A')):
-                six_throwed(game_board, player, figures1, figures_in_houseA, choice, board_size)
-
-            if ((len(figures1) == 1) | (len(figures1) - figures_in_houseA) == 1) & (figures_in_houseA != len(figures1)):
-                move_figure(game_board, 'A', figures1[0], number, figures1, figures_in_houseA, figures2)
-            elif ((len(figures1) != 1) & (choice != 1)) & (figures_in_houseA != len(figures1)):
-                while (not (check_moving_position(game_board, 'A', figures1, [y, x, 0], number))) | (
-                not (([y, x, 0]) in figures1)):
-                    x = int(input("Zadaj X súradnicu panáčika, ktorým chceš pohnúť."))
-                    y = int(input("Zadaj Y súradnicu panáčika, ktorým chceš pohnúť."))
-                figure = figures1.index([y, x, 0])
-
-                move_figure(game_board, 'A', figures1[figure], number, figures1, figures_in_houseA, figures2)
+            make_move(game_board, 'A', number, figures1, figures2, figures_in_houseA, y, x, choice, board_size)
+            print(figures_in_houseA)
 
         if counter % 2 == 1:
-            if (number == 6) & (len(figures2) < 5) & (not (game_board[8][3] == 'B')):
-                if figures_in_houseA == len(figures1):
-                    choice = 1
-                    print("Bola pridaná figurka")
-                else:
-                    choice = int(input(
-                        "Padla 6, zadaj 1 ak chceš pridať nového panáčika, ľubovoľnú inú hodnotu ak chceš pohnúť panáčikom."))
-                if (choice == 1):
-                    add_figure('B', game_board, figures2)
-
-            if ((len(figures2) == 1) | (len(figures2) - figures_in_houseB)) & (figures_in_houseB != len(figures2)):
-                move_figure(game_board, 'B', figures2[0], number, figures2, figures_in_houseB, figures2)
-            elif (choice != 1) | ((len(figures2) != 1) & (choice != 1)) & (figures_in_houseA != len(figures1)):
-                while (not (check_position(game_board, 'B', figures2, [y, x, 0], number))) | (
-                not (([y, x, 0]) in figures2)):
-                    x = int(input("Zadaj X súradnicu panáčika, ktorým chceš pohnúť."))
-                    y = int(input("Zadaj Y súradnicu panáčika, ktorým chceš pohnúť."))
-                figure = figures2.index([y, x, 0])
-
-                move_figure(game_board, 'B', figures2[figure], number, figures2, figures_in_houseB, figures2)
+            make_move(game_board, 'B', number, figures2, figures1, figures_in_houseB, y, x, choice, board_size)
+            print(figures_in_houseB)
 
         counter += 1
 
@@ -105,7 +78,7 @@ def start_game():
 
 # CHECKING FUNCTIONS
 
-def check_position(board, player, position):
+def check_position(board, player, position):  # Zistí či je voľná štartovacia pozícia pre jednotlivého hráča
     if board[position[0]][position[1]] == player:
         return False
     return True
@@ -113,7 +86,7 @@ def check_position(board, player, position):
 
 # GAME BOARD FUNCTIONS
 
-
+# N je veľkosť hracej plochy
 def generate_board(n):
     game_board = [[' '] * n for i in range(n)]  # Vytvorí prázdne miesto pre všetky prvky matice
 
@@ -137,7 +110,7 @@ def generate_board(n):
 
 def draw_board(game_board):
     print("   ", end="")
-    for i in range(len(game_board) - 1):
+    for i in range(len(game_board)):
         if i < 10:
             print(i, end=" ")
         else:
@@ -154,6 +127,7 @@ def draw_board(game_board):
         print(' '.join([element for element in row]))  # Vypíše všetky elementy v riadku a spojí ich medzerou
 
 
+# Uloží pozície hracej plochy do listu za sebou
 def get_positions(game_board, board_size):
     positions = []
 
@@ -167,21 +141,21 @@ def get_positions(game_board, board_size):
     for i in range(int((board_size - 1) / 2) + 1, board_size - 1):
         for j in range(board_size - 1, int((board_size - 1) / 2), -1):
 
-            if ((game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X')):
+            if (game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X'):
                 positions.append([i, j])
 
     positions.append([board_size - 1, int((board_size - 1) / 2) + 1])
 
     for i in range(board_size - 1, int((board_size - 1) / 2), -1):
         for j in range(int((board_size - 1) / 2), 0, -1):
-            if ((game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X')):
+            if (game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X'):
                 positions.append([i, j])
 
     positions.append([int((board_size - 1) / 2) + 1, 0])
 
     for i in range(int((board_size - 1) / 2), -1, -1):
         for j in range(0, int((board_size - 1) / 2)):
-            if ((game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X')):
+            if (game_board[i][j] != ' ') & (game_board[i][j] != 'D') & (game_board[i][j] != 'X'):
                 positions.append([i, j])
 
     positions.append([0, int((board_size - 1) / 2)])
@@ -189,18 +163,19 @@ def get_positions(game_board, board_size):
     return positions
 
 
-def check_moving_position(game_board, player, figures, figure, length, board_size):
+# Skontroluje či pozícia na ktorú sa ide panáčik pohnúť je validná
+def check_moving_position(game_board, player, figure, length, board_size):
     if (figure[1] == 0) & (figure[0] == 0):
         return False
 
     positions = get_positions(game_board, board_size)
 
-    if [figure[0], figure[1]] in positions:
+    if [figure[0], figure[1]] in positions:  # Načíta pozíciu na ktorej sa nachádza panáčik
         current_pos = positions.index([figure[0], figure[1]])
     else:
         return False
 
-    new_pos = current_pos + length
+    new_pos = current_pos + length  # Zistí súradnice novej pozície
     if new_pos >= (board_size - 1) * 4:
         new_pos -= (board_size - 1) * 4
 
@@ -213,81 +188,111 @@ def check_moving_position(game_board, player, figures, figure, length, board_siz
 # PLAYERS FUNCTIONS
 
 def add_figure(player, board, figures, board_size):
-    # Otestuje či je voľná štartovacia plocha
-    if (player == "A") & (check_position(board, player, [[0][int((board_size + 1) / 2)]])):
-            figures.append([0, int((board_size - 1) / 2 + 1), 0])
-    elif (player == "B") & (check_position(board, player, [[board_size - 1][int((board_size - 1) / 2 - 1)]])):
-            figures.append([board_size - 1, int((board_size - 1) / 2 - 1), 0])
+    # Otestuje či je voľná štartovacia plocha a ak áno tak pridá figúrku
+    if (player == "A") & (check_position(board, player, [0, int((board_size + 1) / 2)])):
+        figures.append([0, int((board_size - 1) / 2 + 1), 0])
+        board[0][int((board_size - 1) / 2 + 1)] = player
+    elif (player == "B") & (check_position(board, player, [board_size - 1, int((board_size - 1) / 2 - 1)])):
+        figures.append([board_size - 1, int((board_size - 1) / 2 - 1), 0])
+        board[board_size - 1][int((board_size - 1) / 2 - 1)] = player
 
 
-def delete_figure(player, board, figures, figure):
-    figures.remove(figure)
+# figure - je pozícia figúrky ktorú treba zmazať a figure_index je jej index v liste
+def delete_figure(player, board, figures, figures2, figure, old_pos, figure_index):
+    if ((board[figure[0]][figure[1]] == 'A') & (player == 'B')) | (
+            (board[figure[0]][figure[1]] == 'B') & (player == 'A')):
+        board[figure[0]][figure[1]] = player
+        board[old_pos[0]][old_pos[1]] = '*'
 
+        if player == 'B':
+            figures[figure_index] = [figure[0], figure[1], 0]
+            figures2.remove(figure)
+        else:
+            figures2[figure_index] = [figure[0], figure[1], 0]
+            figures.remove(figure)
+
+
+# y, x sú nové pozície a choice je premenná, ktorá uchovavá akú možnosť si užívateľ zvolil pri hodení 6
 def make_move(board, player, number, figures1, figures2, figures_in_house, y, x, choice, board_size):
-    
+    print(figures_in_house, "n ototo")
+    if player == 'A':
+        start_pos = [0, int((board_size + 1) / 2)]
+    else:
+        start_pos = [board_size - 1, int((board_size - 1) / 2 - 1)]
+
+    if (number == 6) & (len(figures1) < (board_size - 3) / 2) & (
+            check_position(board, player, [start_pos[0], start_pos[1]])):
+        choice = six_throwed(board, player, figures1, figures_in_house, board_size)
+    if ((len(figures1) == 1) | (len(figures1) - figures_in_house) == 1) & (figures_in_house != len(figures1)) & (
+            choice != 1):
+        figures_in_house = move_figure(board, player, figures1[0], number, figures1, figures_in_house, figures2, board_size)
+        print(figures_in_house, "kraal")
+
+    elif (len(figures1) != 1) & (len(figures1) - figures_in_house > 1) & (choice != 1):
+        while (not (check_moving_position(board, player, [y, x, 0], number, board_size))) | (
+                not (([y, x, 0]) in figures1)):
+            x = int(input("Zadaj X súradnicu panáčika, ktorým chceš pohnúť."))
+            y = int(input("Zadaj Y súradnicu panáčika, ktorým chceš pohnúť."))
+        figure = figures1.index([y, x, 0])
+
+        figures_in_house = move_figure(board, player, figures1[figure], number, figures1, figures_in_house, figures2, board_size)
 
 
-def move_figure(board, player, figure, length, figures, figures_in_house, figures2):
-    if figure[2] == 1:
+def move_figure(board, player, figure, length, figures, figures_in_house, figures2, board_size):
+    if figure[2] == 1:  # Ak selektnutý panáčik už je v domčeku
         return
 
-    positions = get_positions(current_game)
+    positions = get_positions(board, board_size)
+    y, x = 0, 0
 
-    current_pos = positions.index([figure[0], figure[1]])
-    new_pos = current_pos + length
-
-    oldY = positions[current_pos][0]
-    oldX = positions[current_pos][1]
+    old_index = positions.index([figure[0], figure[1]])
+    new_index = old_index + length
+    old_pos = [positions[old_index][0], positions[old_index][1]]
 
     figure_index = figures.index(figure)
 
-    if (new_pos == (board_size - 1) * 4) & (player == 'B'):
-        new_pos = 0
+    if (new_index == (board_size - 1) * 4) & (player == 'B'):
+        new_index = 0
 
-    if (board_size - 1) * 4 > new_pos:
-        if (player == 'B') & (new_pos > 15) & (current_pos <= 15):
-            return
+    if new_index < (board_size - 1) * 4:
+        y = positions[new_index][0]
+        x = positions[new_index][1]
+
+    if (board_size - 1) * 4 > new_index:
+        if (player == 'B') & (new_index > ((board_size - 1) * 2) - 1) & (old_index <= ((board_size - 1) * 2) - 1):
+            board[board_size - new_index + ((board_size - 1) * 2) - 2][int((board_size - 1) / 2)] = 'B'
+            board[old_pos[0]][old_pos[1]] = '*'
+            figures[figure_index][2] = 1
+            figures_in_house += 1
         else:
-            y = positions[new_pos][0]
-            x = positions[new_pos][1]
-
-            if (board[y][x] == 'A') & (player == 'B'):
-                delete_figure('A', board, figures2, [y, x, 0])
-            elif (board[y][x] == 'B') & (player == 'A'):
-                delete_figure('B', board, figures2, [y, x, 0])
-
-            board[y][x] = str(player)
-            board[oldY][oldX] = '*'
-
+            board[old_pos[0]][old_pos[1]] = '*'
+            board[y][x] = player
             figures[figure_index] = [y, x, 0]
 
-    if ((board_size - 1) * 4 < new_pos < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'A'):
-        board[new_pos - ((board_size - 1) * 4) + 1][int((board_size - 1) / 2)] = 'A'
-        board[oldY][oldX] = '*'
+    if ((board_size - 1) * 4 <= new_index < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'A'):
+        board[new_index - ((board_size - 1) * 4) + 1][int((board_size - 1) / 2)] = 'A'
+        board[old_pos[0]][old_pos[1]] = '*'
         figures[figure_index][2] = 1
         figures_in_house += 1
 
-    if ((board_size - 1) * 4 < new_pos < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'B'):
-        new_pos = new_pos - current_pos - ((board_size - 1) * 4 - current_pos)
-        y = positions[new_pos][0]
-        x = positions[new_pos][1]
+    if ((board_size - 1) * 4 < new_index < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'B'):
+        new_index = new_index - old_index - ((board_size - 1) * 4 - old_index)
+        y = positions[new_index][0]
+        x = positions[new_index][1]
 
         if (board[y][x] == 'A') & (player == 'B'):
-            delete_figure('A', board, figures2, [y, x, 0])
+            delete_figure('A', board, figures, figures2, [y, x, 0], old_pos, figure_index)
         elif (board[y][x] == 'B') & (player == 'A'):
-            delete_figure('B', board, figures2, [y, x, 0])
+            delete_figure('B', board, figures, figures2, [y, x, 0], old_pos, figure_index)
 
-        board[y][x] = str(player)
-        board[oldY][oldX] = '*'
+        board[y][x] = player
+        board[old_pos[0]][old_pos[1]] = '*'
 
         figures[figure_index] = [y, x, 0]
 
-    if (((board_size - 1) * 2) - 1 < new_pos <= ((board_size - 1) * 2) + 5) & (player == 'B') & (
-            current_pos < ((board_size - 1) * 2)):
-        board[board_size - new_pos + ((board_size - 1) * 2) - 2][int((board_size - 1) / 2)] = 'B'
-        board[oldY][oldX] = '*'
-        figures[figure_index][2] = 1
-        figures_in_house += 1
+    print(figures_in_house, "wtf")
+    return figures_in_house
+
 
 
 # GAME
