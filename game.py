@@ -1,10 +1,6 @@
 #TO DO:
-#Ak A je hore a hodí jednotku zmizne
-#Dava na vyber kym pohnut aj ked je iba jeden
-#B ide do stredu
-#A bol an predposlednom a hodil 2 a bol akokeby o tri
-#Ak je B na 32 ta ksa nevie pohnut
-
+#ked mam dvoch panacikov a padla 6 (A/B) tak musim hrat
+#niekedy nejde selectnut Bcko
 import random
 
 
@@ -58,13 +54,20 @@ def start_game():
         figures_in_houseA = 0
         figures_in_houseB = 0
 
+        for i in range( len(figures1) ):
+            if figures1[i][2] == 1:
+                figures_in_houseA += 1
+        for i in range(len(figures2)):
+            if figures2[i][2] == 1:
+                figures_in_houseB += 1
+
         if counter % 2 == 0:
             make_move(game_board, 'A', number, figures1, figures2, figures_in_houseA, y, x, choice, board_size)
-            print(figures_in_houseA)
 
         if counter % 2 == 1:
             make_move(game_board, 'B', number, figures2, figures1, figures_in_houseB, y, x, choice, board_size)
-            print(figures_in_houseB)
+
+        print(figures1, " a ", figures2)
 
         counter += 1
 
@@ -75,7 +78,7 @@ def start_game():
 
         draw_board(game_board)
 
-agsddasgasdgasg
+
 # CHECKING FUNCTIONS
 
 def check_position(board, player, position):  # Zistí či je voľná štartovacia pozícia pre jednotlivého hráča
@@ -163,6 +166,7 @@ def get_positions(game_board, board_size):
     return positions
 
 
+
 # Skontroluje či pozícia na ktorú sa ide panáčik pohnúť je validná
 def check_moving_position(game_board, player, figure, length, board_size):
     if (figure[1] == 0) & (figure[0] == 0):
@@ -199,22 +203,19 @@ def add_figure(player, board, figures, board_size):
 
 # figure - je pozícia figúrky ktorú treba zmazať a figure_index je jej index v liste
 def delete_figure(player, board, figures, figures2, figure, old_pos, figure_index):
-    if ((board[figure[0]][figure[1]] == 'A') & (player == 'B')) | (
-            (board[figure[0]][figure[1]] == 'B') & (player == 'A')):
-        board[figure[0]][figure[1]] = player
-        board[old_pos[0]][old_pos[1]] = '*'
+    board[figure[0]][figure[1]] = player
+    board[old_pos[0]][old_pos[1]] = '*'
 
-        if player == 'B':
-            figures[figure_index] = [figure[0], figure[1], 0]
-            figures2.remove(figure)
-        else:
-            figures2[figure_index] = [figure[0], figure[1], 0]
-            figures.remove(figure)
+    if player == 'B':
+        figures[figure_index] = [figure[0], figure[1], 0]
+        figures2.remove(figure)
+    else:
+        figures2[figure_index] = [figure[0], figure[1], 0]
+        figures.remove(figure)
 
 
 # y, x sú nové pozície a choice je premenná, ktorá uchovavá akú možnosť si užívateľ zvolil pri hodení 6
 def make_move(board, player, number, figures1, figures2, figures_in_house, y, x, choice, board_size):
-    print(figures_in_house, "n ototo")
     if player == 'A':
         start_pos = [0, int((board_size + 1) / 2)]
     else:
@@ -225,8 +226,14 @@ def make_move(board, player, number, figures1, figures2, figures_in_house, y, x,
         choice = six_throwed(board, player, figures1, figures_in_house, board_size)
     if ((len(figures1) == 1) | (len(figures1) - figures_in_house) == 1) & (figures_in_house != len(figures1)) & (
             choice != 1):
-        figures_in_house = move_figure(board, player, figures1[0], number, figures1, figures_in_house, figures2, board_size)
-        print(figures_in_house, "kraal")
+        lonely_figure = 0
+
+        for i in range(len(figures1)):
+            if figures1[i][2] == 0:
+                lonely_figure = i
+                break
+
+        move_figure(board, player, figures1[lonely_figure], number, figures1, figures2, board_size)
 
     elif (len(figures1) != 1) & (len(figures1) - figures_in_house > 1) & (choice != 1):
         while (not (check_moving_position(board, player, [y, x, 0], number, board_size))) | (
@@ -235,10 +242,10 @@ def make_move(board, player, number, figures1, figures2, figures_in_house, y, x,
             y = int(input("Zadaj Y súradnicu panáčika, ktorým chceš pohnúť."))
         figure = figures1.index([y, x, 0])
 
-        figures_in_house = move_figure(board, player, figures1[figure], number, figures1, figures_in_house, figures2, board_size)
+        move_figure(board, player, figures1[figure], number, figures1, figures2, board_size)
 
 
-def move_figure(board, player, figure, length, figures, figures_in_house, figures2, board_size):
+def move_figure(board, player, figure, length, figures, figures2, board_size):
     if figure[2] == 1:  # Ak selektnutý panáčik už je v domčeku
         return
 
@@ -246,52 +253,54 @@ def move_figure(board, player, figure, length, figures, figures_in_house, figure
     y, x = 0, 0
 
     old_index = positions.index([figure[0], figure[1]])
+    print("Old index je: ", old_index, " a length je ", length)
     new_index = old_index + length
     old_pos = [positions[old_index][0], positions[old_index][1]]
 
     figure_index = figures.index(figure)
 
-    if (new_index == (board_size - 1) * 4) & (player == 'B'):
+    if (new_index == (board_size - 1) * 4) & (player == 'B') | ((player == 'A') & (old_index > ((board_size - 1) * 4) - 6)):
         new_index = 0
-
+    print("index je:", new_index)
     if new_index < (board_size - 1) * 4:
         y = positions[new_index][0]
         x = positions[new_index][1]
 
-    if (board_size - 1) * 4 > new_index:
-        if (player == 'B') & (new_index > ((board_size - 1) * 2) - 1) & (old_index <= ((board_size - 1) * 2) - 1):
-            board[board_size - new_index + ((board_size - 1) * 2) - 2][int((board_size - 1) / 2)] = 'B'
+    if (board[y][x] == 'A') & (player == 'B'):
+        delete_figure('B', board, figures, figures2, [y, x, 0], old_pos, figure_index)
+    elif (board[y][x] == 'B') & (player == 'A'):
+        delete_figure('A', board, figures, figures2, [y, x, 0], old_pos, figure_index)
+    else:
+
+        if (board_size - 1) * 4 > new_index:
+            if (player == 'B') & (((board_size - 1) * 2) - 1 < new_index < ((board_size - 1) * 2 ) + (board_size - 3) / 2) & (old_index <= ((board_size - 1) * 2) - 1):
+                board[board_size - new_index + ((board_size - 1) * 2) - 2][int((board_size - 1) / 2)] = 'B'
+                board[old_pos[0]][old_pos[1]] = '*'
+                figures[figure_index] = [board_size - new_index + ((board_size - 1) * 2) - 2, int((board_size - 1) / 2), 1]
+            else:
+                if not( (player == "B") & (new_index > (board_size * 2) + 1) & ((((board_size - 1) * 2) - 1) > old_index > (board_size + (board_size - 3)/ 2))):
+                    board[old_pos[0]][old_pos[1]] = '*'
+                    board[y][x] = player
+                    figures[figure_index] = [y, x, 0]
+
+        if ((board_size - 1) * 4 <= new_index < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'A'):
+            board[new_index - ((board_size - 1) * 4) + 1][int((board_size - 1) / 2)] = 'A'
             board[old_pos[0]][old_pos[1]] = '*'
-            figures[figure_index][2] = 1
-            figures_in_house += 1
-        else:
-            board[old_pos[0]][old_pos[1]] = '*'
+            figures[figure_index] = [new_index - ((board_size - 1) * 4) + 1, int((board_size - 1) / 2), 1]
+
+        if ((board_size - 1) * 4 <= new_index < (board_size - 1) * 4 + 6) & (player == 'B'):
+            new_index = new_index - old_index - ((board_size - 1) * 4 - old_index)
+            y = positions[new_index][0]
+            x = positions[new_index][1]
+
             board[y][x] = player
+            board[old_pos[0]][old_pos[1]] = '*'
+
             figures[figure_index] = [y, x, 0]
 
-    if ((board_size - 1) * 4 <= new_index < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'A'):
-        board[new_index - ((board_size - 1) * 4) + 1][int((board_size - 1) / 2)] = 'A'
-        board[old_pos[0]][old_pos[1]] = '*'
-        figures[figure_index][2] = 1
-        figures_in_house += 1
 
-    if ((board_size - 1) * 4 < new_index < (board_size - 1) * 4 + (board_size - 3) / 2) & (player == 'B'):
-        new_index = new_index - old_index - ((board_size - 1) * 4 - old_index)
-        y = positions[new_index][0]
-        x = positions[new_index][1]
 
-        if (board[y][x] == 'A') & (player == 'B'):
-            delete_figure('A', board, figures, figures2, [y, x, 0], old_pos, figure_index)
-        elif (board[y][x] == 'B') & (player == 'A'):
-            delete_figure('B', board, figures, figures2, [y, x, 0], old_pos, figure_index)
 
-        board[y][x] = player
-        board[old_pos[0]][old_pos[1]] = '*'
-
-        figures[figure_index] = [y, x, 0]
-
-    print(figures_in_house, "wtf")
-    return figures_in_house
 
 
 
